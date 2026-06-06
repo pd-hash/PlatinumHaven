@@ -1,7 +1,6 @@
 require('dotenv').config({ override: true });
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 
 const authRouter = require('./routes/auth');
 const roomsRouter = require('./routes/rooms');
@@ -71,8 +70,6 @@ const sendDbHealth = async (_, res) => {
 // treat nested health paths differently.
 app.get('/api/health/db', sendDbHealth);
 app.get('/api/db-health', sendDbHealth);
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
