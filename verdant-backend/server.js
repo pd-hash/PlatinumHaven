@@ -58,14 +58,19 @@ app.use('/api/paypal', paypalRouter);
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'Verdant Haven API' }));
 
-app.get('/api/health/db', async (_, res) => {
+const sendDbHealth = async (_, res) => {
   try {
     const details = await checkConnection();
     res.json({ status: 'ok', database: details.database, user: details.user, connected_at: details.connected_at });
   } catch (err) {
     res.status(503).json({ status: 'error', error: err.message, code: err.code });
   }
-});
+};
+
+// Keep the original nested route and add a flatter alias in case some hosts
+// treat nested health paths differently.
+app.get('/api/health/db', sendDbHealth);
+app.get('/api/db-health', sendDbHealth);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
