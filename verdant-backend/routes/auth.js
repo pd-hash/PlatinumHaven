@@ -3,22 +3,12 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const pool    = require('../db');
 const multer  = require('multer');
-const path    = require('path');
-const fs      = require('fs');
+const { uploadCustomerId } = require('../lib/storage');
 
 const passwordResetCodes = new Map();
 
 const validIdUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = path.join(__dirname, '../uploads/ids');
-      fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      cb(null, `valid-id-${Date.now()}${path.extname(file.originalname)}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
@@ -198,15 +188,19 @@ router.post('/forgot-password/confirm', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.post('/upload-id', validIdUpload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No ID image uploaded' });
+router.post('/upload-id', validIdUpload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No ID image uploaded' });
+    }
+    const { signedUrl } = await uploadCustomerId(req.file);
+    res.json({
+      message: 'ID uploaded successfully.',
+      url: signedUrl,
+    });
+  } catch (err) {
+    next(err);
   }
-  const url = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/ids/${req.file.filename}`;
-  res.json({
-    message: 'ID uploaded successfully.',
-    url,
-  });
 });
 
 const { authenticate } = require('../middleware/auth');

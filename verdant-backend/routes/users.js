@@ -2,26 +2,21 @@ const router = require('express').Router();
 const pool   = require('../db');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { authenticate, adminOnly } = require('../middleware/auth');
+const { uploadCustomerId, resolveValidIdUrl } = require('../lib/storage');
 
 const validIdUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = path.join(__dirname, '../uploads/ids');
-      fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      cb(null, `valid-id-${Date.now()}${path.extname(file.originalname)}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Only image files are allowed'));
   },
+});
+
+const normalizeCustomer = async (customer) => ({
+  ...customer,
+  valid_id_url: await resolveValidIdUrl(customer.valid_id_url),
 });
 
 // GET /api/users  —  all staff (not customers)
@@ -95,7 +90,7 @@ router.get('/pending', authenticate, async (req, res, next) => {
       AND approval_status = 'Pending'
       ORDER BY created_at DESC
     `);
-    res.json(rows);
+    res.json(await Promise.all(rows.map(normalizeCustomer)));
   } catch (err) { next(err); }
 });
 
@@ -125,17 +120,17 @@ router.post('/:id/upload-valid-id', authenticate, validIdUpload.single('file'), 
       return res.status(400).json({ error: 'No ID image uploaded' });
     }
 
-    const validIdUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/ids/${req.file.filename}`;
+    const { storagePath, signedUrl } = await uploadCustomerId(req.file);
     const { rows } = await pool.query(
       `UPDATE profiles
        SET valid_id_url = $1
        WHERE id = $2 AND role = 'customer'
        RETURNING id, full_name, email, phone, sex, valid_id_url, approval_status, created_at`,
-      [validIdUrl, req.params.id]
+      [storagePath, req.params.id]
     );
 
     if (!rows[0]) return res.status(404).json({ error: 'Customer not found' });
-    res.json(rows[0]);
+    res.json({ ...rows[0], valid_id_url: signedUrl });
   } catch (err) { next(err); }
 });
 

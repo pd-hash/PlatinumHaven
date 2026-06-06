@@ -2,8 +2,7 @@ const router = require('express').Router();
 const pool = require('../db');
 const { authenticate, adminOnly } = require('../middleware/auth');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { uploadRoomImage } = require('../lib/storage');
 
 const buildMonthRange = (month) => {
   const now = new Date();
@@ -127,16 +126,7 @@ const summarizeMonthlyAvailability = (room, dayMap, month) => {
 };
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = path.join(__dirname, '../uploads/rooms');
-      fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      cb(null, `room-${Date.now()}${path.extname(file.originalname)}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
@@ -144,10 +134,14 @@ const upload = multer({
   },
 });
 
-router.post('/upload-image', authenticate, upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/rooms/${req.file.filename}`;
-  res.json({ url });
+router.post('/upload-image', authenticate, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const { publicUrl } = await uploadRoomImage(req.file);
+    res.json({ url: publicUrl });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/', authenticate, async (req, res, next) => {
