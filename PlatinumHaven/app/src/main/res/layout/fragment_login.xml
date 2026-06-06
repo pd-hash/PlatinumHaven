@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F7F8F9">
+
+    <!-- Top Green Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#1B3A2D"
+        android:paddingBottom="40dp">
+
+        <!-- Leaf Logo -->
+        <LinearLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_circle_green"
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌿"
+                android:textSize="32sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The Platinum Haven"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nature's Luxury Retreat"
+            android:textColor="#A3C9A8"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- White Card -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Tab: Login / Register -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_tab_container"
+                android:layout_marginBottom="24dp">
+
+                <Button
+                    android:id="@+id/btnTabLogin"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Login"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="#1B3A2D"
+                    android:textColor="#FFFFFF"
+                    android:stateListAnimator="@null" />
+
+                <Button
+                    android:id="@+id/btnTabRegister"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Register"
+                    android:textSize="14sp"
+                    android:backgroundTint="#F3F4F6"
+                    android:textColor="#6B7280"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- Email -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Email Address"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#374151"
+                android:layout_marginBottom="6dp" />
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="juan@example.com"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/bg_input"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textSize="14sp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@color/black"/>
+
+            <!-- Password -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Password"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#374151"
+                android:layout_marginBottom="6dp" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="8dp">
+
+                <EditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:hint="••••••••"
+                    android:inputType="textPassword"
+                    android:background="@drawable/bg_input"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="56dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"/>
+
+                <ImageButton
+                    android:id="@+id/btnTogglePassword"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="@null"
+                    android:src="@drawable/ic_eye_closed"
+                    android:tint="#9CA3AF" />
+            </FrameLayout>
+
+            <!-- Forgot Password -->
+            <TextView
+                android:id="@+id/tvForgotPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Forgot Password?"
+                android:textColor="#2D6A4F"
+                android:textSize="12sp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Error -->
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#EF4444"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Sign In Button -->
+            <Button
+                android:id="@+id/btnSignIn"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Sign In →"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:backgroundTint="#1B3A2D"
+                android:textColor="#FFFFFF"
+                android:stateListAnimator="@null"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Or Sign Up -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Or "
+                    android:textColor="#9CA3AF"
+                    android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/tvSignUp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sign up"
+                    android:textColor="#2D6A4F"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

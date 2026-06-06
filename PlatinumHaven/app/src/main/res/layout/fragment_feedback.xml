@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F7F8F9"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#1B3A2D"
+            android:padding="28dp"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="&#9733;"
+                android:textSize="42sp"
+                android:layout_marginBottom="10dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="How was your stayv"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your feedback helps us improve"
+                android:textColor="#A3C9A8"
+                android:textSize="13sp"/>
+        </LinearLayout>
+
+        <!-- Star Rating Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Rating"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1B3A2D"
+                    android:layout_marginBottom="20dp"/>
+
+                <!-- Stars Row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/btnStar1"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:text="&#9733;"
+                        android:textSize="40sp"
+                        android:gravity="center"
+                        android:textColor="#E5E7EB"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/btnStar2"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:text="&#9733;"
+                        android:textSize="40sp"
+                        android:gravity="center"
+                        android:textColor="#E5E7EB"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/btnStar3"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:text="&#9733;"
+                        android:textSize="40sp"
+                        android:gravity="center"
+                        android:textColor="#E5E7EB"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/btnStar4"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:text="&#9733;"
+                        android:textSize="40sp"
+                        android:gravity="center"
+                        android:textColor="#E5E7EB"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/btnStar5"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:text="&#9733;"
+                        android:textSize="40sp"
+                        android:gravity="center"
+                        android:textColor="#E5E7EB"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                </LinearLayout>
+
+                <!-- Rating Label -->
+                <TextView
+                    android:id="@+id/tvRatingLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tap a star to rate"
+                    android:textColor="#9CA3AF"
+                    android:textSize="14sp"
+                    android:gravity="center"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Comment Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Comment"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1B3A2D"
+                    android:layout_marginBottom="12dp"/>
+
+                <EditText
+                    android:id="@+id/etComment"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:hint="Tell us about your experience..."
+                    android:inputType="textMultiLine"
+                    android:gravity="top|start"
+                    android:background="@drawable/bg_input"
+                    android:padding="14dp"
+                    android:textSize="14sp"
+                    android:textColor="#374151"
+                    android:textColorHint="#9CA3AF"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Error -->
+        <TextView
+            android:id="@+id/tvError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#EF4444"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:layout_marginBottom="10dp"/>
+
+        <!-- Submit Button -->
+        <Button
+            android:id="@+id/btnSubmit"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Submit Feedback"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#1B3A2D"
+            android:textColor="#FFFFFF"
+            android:stateListAnimator="@null"/>
+
+    </LinearLayout>
+</ScrollView>

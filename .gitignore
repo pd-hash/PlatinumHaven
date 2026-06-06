@@ -1,0 +1,23 @@
+# Workspace-level generated files
+node_modules/
+.tmp-dev-*.log
+*.log
+.local-postgres/
+
+# Backend
+verdant-backend/.env
+verdant-backend/node_modules/
+verdant-backend/uploads/
+
+# Frontend
+verdant-frontend/.env
+verdant-frontend/node_modules/
+verdant-frontend/dist/
+
+# Android
+PlatinumHaven/.gradle/
+PlatinumHaven/.idea/
+PlatinumHaven/build/
+PlatinumHaven/app/build/
+PlatinumHaven/local.properties
+PlatinumHaven/app/local.properties

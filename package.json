@@ -1,0 +1,23 @@
+{
+  "name": "hotel-system",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Combined entrypoint for the hotel system database, backend, frontend, and Android app",
+  "scripts": {
+    "start": "powershell -ExecutionPolicy Bypass -File scripts\\dev.ps1 -IncludeMobile",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts\\dev.ps1 -IncludeMobile",
+    "app:start": "powershell -ExecutionPolicy Bypass -File scripts\\dev.ps1 -IncludeMobile",
+    "start:web": "powershell -ExecutionPolicy Bypass -File scripts\\dev.ps1",
+    "dev:web": "powershell -ExecutionPolicy Bypass -File scripts\\dev.ps1",
+    "backend:start": "npm run start --prefix verdant-backend",
+    "backend:dev": "npm run dev --prefix verdant-backend",
+    "frontend:dev": "npm run dev --prefix verdant-frontend",
+    "frontend:build": "npm run build --prefix verdant-frontend",
+    "build:mobile": ".\\PlatinumHaven\\gradlew.bat -p .\\PlatinumHaven assembleDebug",
+    "install:mobile": "powershell -ExecutionPolicy Bypass -File scripts\\start-android.ps1",
+    "start:mobile": "powershell -ExecutionPolicy Bypass -File scripts\\start-android.ps1",
+    "build:mobile:release": ".\\PlatinumHaven\\gradlew.bat -p .\\PlatinumHaven assembleRelease",
+    "frontend:preview": "npm run preview --prefix verdant-frontend",
+    "install:all": "npm install --prefix verdant-backend && npm install --prefix verdant-frontend"
+  }
+}

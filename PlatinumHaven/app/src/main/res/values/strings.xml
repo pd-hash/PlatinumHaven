@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">PlatinumHaven</string>
+    <string name="chat_avatar_initials">PH</string>
+    <string name="chat_title">Guest Services</string>
+    <string name="chat_status_online">Concierge online</string>
+    <string name="chat_intro_title">Professional Stay Assistance</string>
+    <string name="chat_intro_subtitle">Get guidance on rooms, reservations, PayPal payments, add-ons, and live guest support.</string>
+    <string name="chat_live_support">Chat live</string>
+    <string name="chat_live_support_title">Would you like direct guest assistance?</string>
+    <string name="chat_live_support_subtitle">Open our live support window to chat with a Platinum Haven representative.</string>
+    <string name="chat_input_hint">Ask about your stay, reservation, payment, or support needs...</string>
+    <string name="chat_send">Send</string>
+    <string name="paypal_checkout_title">PayPal Checkout</string>
+</resources>

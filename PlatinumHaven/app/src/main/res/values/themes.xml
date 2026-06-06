@@ -1,0 +1,12 @@
+<resources>
+    <style name="Base.Theme.PlatinumHaven"
+        parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#1B3A2D</item>
+        <item name="colorPrimaryVariant">#2D6A4F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+    <style name="Theme.PlatinumHaven" parent="Base.Theme.PlatinumHaven"/>
+</resources>
