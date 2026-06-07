@@ -15,7 +15,9 @@ const getPayPalAccessToken = async () => {
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error('PayPal credentials are not configured');
+    const error = new Error('PayPal credentials are not configured');
+    error.statusCode = 503;
+    throw error;
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -99,6 +101,9 @@ router.post('/create-order', authenticate, async (req, res, next) => {
       approveUrl: findLink(data.links, 'approve') || findLink(data.links, 'payer-action'),
     });
   } catch (error) {
+    if (error?.statusCode === 503) {
+      return res.status(503).json({ error: error.message });
+    }
     next(error);
   }
 });
@@ -134,6 +139,9 @@ router.post('/capture-order', authenticate, async (req, res, next) => {
       captureStatus: capture?.status || null,
     });
   } catch (error) {
+    if (error?.statusCode === 503) {
+      return res.status(503).json({ error: error.message });
+    }
     next(error);
   }
 });

@@ -141,8 +141,18 @@ class BookingStep3Fragment : Fragment() {
             }
 
             result.onFailure { error ->
+                val message = error.message.orEmpty()
+                if (isPayPalConfigError(message)) {
+                    Toast.makeText(
+                        requireContext(),
+                        "PayPal demo mode is being used because the server is not configured yet.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    submitBooking("PayPal")
+                    return@onFailure
+                }
                 resetPayPalState()
-                showError(error.message ?: "Unable to start PayPal checkout.")
+                showError(message.ifBlank { "Unable to start PayPal checkout." })
             }
         }
 
@@ -257,6 +267,13 @@ class BookingStep3Fragment : Fragment() {
     private fun showError(message: String) {
         binding.tvError.text = message
         binding.tvError.visibility = View.VISIBLE
+    }
+
+    private fun isPayPalConfigError(message: String): Boolean {
+        val normalized = message.lowercase()
+        return normalized.contains("paypal credentials are not configured") ||
+            normalized.contains("paypal client id") ||
+            normalized.contains("paypal client secret")
     }
 
     override fun onDestroyView() {
