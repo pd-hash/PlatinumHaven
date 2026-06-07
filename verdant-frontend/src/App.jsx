@@ -415,7 +415,7 @@ const Sidebar = ({ active, setActive, user, onLogout }) => {
             <AppIcon name="rooms" size={18} color="#fff" />
           </div>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, fontFamily: "'Playfair Display',serif" }}>The Platinum Haven</div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, fontFamily: "'Playfair Display',serif" }}>Platinum Haven</div>
             <div style={{ fontSize: 10, color: '#a3c9a8' }}>Hotel Management</div>
           </div>
         </div>
@@ -478,7 +478,7 @@ const Login = ({ onLogin }) => {
             <AppIcon name="leaf" size={22} color="#2f6d3d" stroke={2} />
           </div>
           <h2 style={{ color: '#fff', margin: '0 0 6px', fontSize: 24, fontWeight: 700, textAlign: 'center', fontFamily: "'Playfair Display',serif" }}>Admin Portal</h2>
-          <p style={{ color: 'rgba(223,235,219,0.65)', fontSize: 11, margin: '0 0 30px', textAlign: 'center' }}>Verdant Haven Resort Management</p>
+          <p style={{ color: 'rgba(223,235,219,0.65)', fontSize: 11, margin: '0 0 30px', textAlign: 'center' }}>Platinum Haven Resort Management</p>
           <div style={{ marginBottom: 16, textAlign: 'left' }}>
             <label style={{ ...labelStyle, color: '#d7ead7', fontSize: 11, marginBottom: 8 }}>Username</label>
             <div style={{ position: 'relative' }}>
@@ -537,7 +537,7 @@ const AdminDashboard = ({ user, setActive }) => {
   if (error) return <><Topbar title="Dashboard" user={user}/><ErrorMsg msg={error} onRetry={load}/></>;
   return (
     <div>
-      <Topbar title="Dashboard Overview" subtitle="A quick operational snapshot for The Platinum Haven Hotel." user={user}/>
+      <Topbar title="Dashboard Overview" subtitle="A quick operational snapshot for Platinum Haven Resort Management." user={user}/>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
         <MetricCard label="Total Bookings" value={stats.total_bookings?.toLocaleString() || '0'} icon="bookings" bg="#2d6a4f" accent="#1b3a2d" />
         <MetricCard label="Monthly Income" value={fmt(stats.monthly_income)} icon="income" bg="#2563eb" accent="#1b3a2d" />
