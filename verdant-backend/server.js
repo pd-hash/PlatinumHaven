@@ -23,6 +23,8 @@ const allowedOrigins = new Set(
     process.env.CORS_ORIGIN,
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
   ]
     .filter(Boolean)
     .flatMap((value) => String(value).split(','))
@@ -30,10 +32,22 @@ const allowedOrigins = new Set(
     .filter(Boolean)
 );
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.has(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    return parsed.protocol === 'https:' && parsed.hostname.endsWith('.netlify.app');
+  } catch {
+    return false;
+  }
+};
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
 
