@@ -66,6 +66,21 @@ CREATE TABLE IF NOT EXISTS reservations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS housekeeping_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reservation_id UUID UNIQUE REFERENCES reservations(id) ON DELETE CASCADE,
+  room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  assigned_staff_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  notes TEXT,
+  due_date DATE,
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS reservation_addons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
@@ -100,3 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_customer_id ON reservations(customer
 CREATE INDEX IF NOT EXISTS idx_reservations_room_id ON reservations(room_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_created_at ON reservations(created_at);
 CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at);
+CREATE INDEX IF NOT EXISTS idx_housekeeping_tasks_room_id ON housekeeping_tasks(room_id);
+CREATE INDEX IF NOT EXISTS idx_housekeeping_tasks_assigned_staff_id ON housekeeping_tasks(assigned_staff_id);
+CREATE INDEX IF NOT EXISTS idx_housekeeping_tasks_status ON housekeeping_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_housekeeping_tasks_due_date ON housekeeping_tasks(due_date);

@@ -32,15 +32,16 @@ const formatBookingDateTime = (value) => {
 };
 
 const NAV_BY_ROLE = {
-  admin:   ['dashboard','reports','users'],
-  manager: ['dashboard','audit','rooms','add-ons','customers','approvals'],
-  staff:   ['dashboard','reservations','customers','approvals'],
+  admin:   ['dashboard','reports','housekeeping','users'],
+  manager: ['dashboard','audit','rooms','housekeeping','add-ons','customers','approvals'],
+  staff:   ['dashboard','reservations','housekeeping','customers','approvals'],
 };
 
 const NAV_ITEMS = [
   { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
   { id: 'reports', icon: 'reports', label: 'Reports' },
   { id: 'rooms', icon: 'rooms', label: 'Rooms' },
+  { id: 'housekeeping', icon: 'housekeeping', label: 'Housekeeping' },
   { id: 'reservations', icon: 'reservations', label: 'Reservations' },
   { id: 'customers', icon: 'customers', label: 'Customers' },
   { id: 'add-ons', icon: 'addons', label: 'Add-Ons' },
@@ -58,6 +59,8 @@ const can = (user, action) => {
   };
   return (perms[user?.role] || []).includes(action);
 };
+
+const canManageHousekeeping = (user) => ['admin', 'manager'].includes(user?.role);
 
 const AppIcon = ({ name, size = 18, color = 'currentColor', stroke = 1.9 }) => {
   const common = {
@@ -92,6 +95,8 @@ const AppIcon = ({ name, size = 18, color = 'currentColor', stroke = 1.9 }) => {
       return <svg {...common}><path d="M4 19h16"/><path d="M7 16V8"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg>;
     case 'approvals':
       return <svg {...common}><path d="M20 6 9 17l-5-5"/></svg>;
+    case 'housekeeping':
+      return <svg {...common}><path d="M5 20h14"/><path d="M9 20V9l4-4 2 2-4 4h6"/><path d="M7 14l4 4"/><path d="M15 6l3 3"/></svg>;
     case 'bookings':
       return <svg {...common}><path d="M7 2v4"/><path d="M17 2v4"/><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16"/></svg>;
     case 'income':
@@ -135,6 +140,7 @@ const StatusBadge = ({ status }) => {
   const colors = {
     Confirmed:'#dcfce7,#1a7f4b', Pending:'#fef9c3,#b87a00', Cancelled:'#fee2e2,#c0392b',
     Completed:'#dbeafe,#2563eb', Holding:'#ede9fe,#7c3aed', Maintenance:'#ffedd5,#9a3412',
+    'In Progress':'#dbeafe,#2563eb', Blocked:'#fee2e2,#c0392b',
     Available:'#dcfce7,#1a7f4b', Occupied:'#dbeafe,#2563eb', Paid:'#dcfce7,#1a7f4b',
     Refund:'#fee2e2,#c0392b', 'Low Stock':'#fef9c3,#b87a00', 'Out of Stock':'#fee2e2,#c0392b',
     Active:'#dcfce7,#1a7f4b', Inactive:'#f3f4f6,#6b7280',
@@ -1448,6 +1454,207 @@ const Approvals = ({ user }) => {
   );
 };
 
+const Housekeeping = ({ user }) => {
+  const canManage = canManageHousekeeping(user);
+  const [tasks, setTasks] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('All');
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [form, setForm] = useState({ room_id: '', assigned_staff_id: '', status: 'Pending', notes: '', due_date: '' });
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [taskData, roomData, staffData] = await Promise.all([
+        api.getHousekeepingTasks({ status: filter }),
+        api.getRooms({}),
+        canManage ? api.getScheduleStaff() : Promise.resolve([]),
+      ]);
+      setTasks(taskData);
+      setRooms(roomData);
+      setStaffList(staffData);
+      setLastUpdated(new Date());
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, canManage]);
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, 10000);
+    return () => clearInterval(timer);
+  }, [load]);
+
+  const resetForm = () => {
+    setEditingTask(null);
+    setForm({ room_id: '', assigned_staff_id: '', status: 'Pending', notes: '', due_date: '' });
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  const openEdit = (task) => {
+    setEditingTask(task);
+    setForm({
+      room_id: task.room_id || '',
+      assigned_staff_id: task.assigned_staff_id || '',
+      status: task.status || 'Pending',
+      notes: task.notes || '',
+      due_date: task.due_date || '',
+    });
+    setShowModal(true);
+  };
+
+  const saveTask = async () => {
+    if (!form.room_id && !editingTask?.reservation_id) return;
+    setSaving(true);
+    try {
+      const payload = { ...form };
+      if (!canManage) return;
+      if (editingTask) {
+        const updated = await api.updateHousekeepingTask(editingTask.id, payload);
+        setTasks(prev => prev.map(task => task.id === editingTask.id ? { ...task, ...updated } : task));
+      } else {
+        const created = await api.createHousekeepingTask(payload);
+        setTasks(prev => [created, ...prev]);
+      }
+      setShowModal(false);
+      resetForm();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateStatus = async (task, status) => {
+    setSaving(true);
+    try {
+      const updated = await api.updateHousekeepingTask(task.id, { status });
+      setTasks(prev => prev.map(item => item.id === task.id ? { ...item, ...updated } : item));
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredTasks = tasks;
+  const counts = {
+    total: filteredTasks.length,
+    pending: filteredTasks.filter(t => t.status === 'Pending').length,
+    inProgress: filteredTasks.filter(t => t.status === 'In Progress').length,
+    completed: filteredTasks.filter(t => t.status === 'Completed').length,
+  };
+
+  return (
+    <div>
+      <Topbar
+        title="Housekeeping"
+        subtitle="Track which cleaner is assigned to each room in real time."
+        user={user}
+        action={canManage ? <button onClick={openCreate} style={{background:'#1b3a2d',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',cursor:'pointer',fontSize:13,fontWeight:600,width:'100%'}}>+ Assign Room</button> : null}
+      />
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+        <MetricCard label="Tasks" value={counts.total} icon="housekeeping" bg="#1b3a2d" accent="#1b3a2d" />
+        <MetricCard label="Pending" value={counts.pending} icon="arrival" bg="#b87a00" accent="#92400e" />
+        <MetricCard label="In Progress" value={counts.inProgress} icon="checkin" bg="#2563eb" accent="#1d4ed8" />
+        <MetricCard label="Completed" value={counts.completed} icon="confirmed" bg="#1a7f4b" accent="#1a7f4b" />
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{padding:'9px 14px',borderRadius:8,border:'1px solid #e5e7eb',fontSize:13}}>
+          {['All','Pending','In Progress','Completed','Blocked'].map(s => <option key={s}>{s}</option>)}
+        </select>
+        <div style={{fontSize:12,color:'#6b7280'}}>
+          {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Live updates every 10 seconds'}
+        </div>
+      </div>
+      {loading && <Spinner/>}
+      {error && <ErrorMsg msg={error} onRetry={load}/>}
+      {!loading && !error && filteredTasks.length === 0 && (
+        <div style={{textAlign:'center',padding:60,color:'#9ca3af',background:'#fff',borderRadius:12,boxShadow:'0 1px 4px rgba(0,0,0,0.07)'}}>
+          <div style={{fontSize:18,fontWeight:600,marginBottom:6}}>No housekeeping tasks yet</div>
+          <div style={{fontSize:13}}>Completed reservations will appear here automatically, and managers can assign rooms manually.</div>
+        </div>
+      )}
+      {!loading && !error && filteredTasks.length > 0 && (
+        <div style={{background:'#fff',borderRadius:12,boxShadow:'0 1px 4px rgba(0,0,0,0.07)',overflow:'hidden'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+            <thead>
+              <tr style={{background:'#f9fafb'}}>
+                {['Room','Reservation','Cleaner','Status','Due','Notes','Actions'].map(h => <th key={h} style={{padding:'12px 16px',textAlign:'left',color:'#6b7280',fontWeight:600,fontSize:12}}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTasks.map(task => (
+                <tr key={task.id} style={{borderTop:'1px solid #f3f4f6'}}>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{fontWeight:700}}>{task.room_name || 'Room'}</div>
+                    <div style={{fontSize:11,color:'#6b7280'}}>{task.room_number || '—'} · {task.room_type || '—'}</div>
+                  </td>
+                  <td style={{padding:'12px 16px',color:'#6b7280'}}>
+                    <div style={{fontWeight:600,color:'#111827'}}>{task.reservation_no || 'Manual task'}</div>
+                    <div style={{fontSize:11}}>{task.reservation_status || 'N/A'}</div>
+                  </td>
+                  <td style={{padding:'12px 16px'}}>
+                    {task.assigned_staff_name
+                      ? <div><div style={{fontWeight:600}}>{task.assigned_staff_name}</div><div style={{fontSize:11,color:'#6b7280',textTransform:'capitalize'}}>{task.assigned_staff_role}</div></div>
+                      : <StatusBadge status="Pending" />
+                    }
+                  </td>
+                  <td style={{padding:'12px 16px'}}><StatusBadge status={task.status} /></td>
+                  <td style={{padding:'12px 16px',color:'#6b7280'}}>{task.due_date || (task.check_out ? formatBookingDateTime(task.check_out) : '—')}</td>
+                  <td style={{padding:'12px 16px',color:'#6b7280',maxWidth:240}}>{task.notes || '—'}</td>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                      {canManage && <button onClick={() => openEdit(task)} style={{background:'#f0fdf4',color:'#2d6a4f',border:'1px solid #bbf7d0',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:12,fontWeight:600}}>Edit</button>}
+                      {!canManage && task.assigned_staff_id === user?.id && task.status !== 'Completed' && (
+                        <>
+                          {task.status !== 'In Progress' && <button onClick={() => updateStatus(task, 'In Progress')} disabled={saving} style={{background:'#dbeafe',color:'#1d4ed8',border:'1px solid #bfdbfe',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:12,fontWeight:600}}>Start</button>}
+                          <button onClick={() => updateStatus(task, 'Completed')} disabled={saving} style={{background:'#dcfce7',color:'#1a7f4b',border:'1px solid #bbf7d0',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:12,fontWeight:600}}>Done</button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showModal && canManage && (
+        <Modal title={editingTask ? 'Edit Housekeeping Task' : 'Assign Housekeeping Task'} onClose={() => { setShowModal(false); resetForm(); }}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={labelStyle}>Room</label><select value={form.room_id} onChange={e => setForm(f => ({ ...f, room_id: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}><option value="">Select room...</option>{rooms.map(room => <option key={room.id} value={room.id}>{room.room_number} - {room.name}</option>)}</select></div>
+            <div><label style={labelStyle}>Assigned Cleaner</label><select value={form.assigned_staff_id} onChange={e => setForm(f => ({ ...f, assigned_staff_id: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}><option value="">Unassigned</option>{staffList.map(staff => <option key={staff.id} value={staff.id}>{staff.full_name} ({staff.role})</option>)}</select></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div><label style={labelStyle}>Status</label><select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}>{['Pending','In Progress','Completed','Blocked'].map(s => <option key={s}>{s}</option>)}</select></div>
+              <div><label style={labelStyle}>Due Date</label><input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={inputStyle}/></div>
+            </div>
+            <div><label style={labelStyle}>Notes</label><textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} style={{...inputStyle,resize:'vertical'}} placeholder="Cleaning instructions, special care, etc."/></div>
+            <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:4}}>
+              <button onClick={() => { setShowModal(false); resetForm(); }} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:7,padding:'9px 20px',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={saveTask} disabled={saving || !form.room_id} style={{background:'#1b3a2d',color:'#fff',border:'none',borderRadius:7,padding:'9px 22px',cursor:'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Saving…' : (editingTask ? 'Save Changes' : 'Assign Task')}</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const [user,setUser]=useState(null); const [active,setActive]=useState(null); const [checking,setChecking]=useState(true);
   useEffect(()=>{
@@ -1456,7 +1663,7 @@ function App() {
   },[]);
   const handleLogin=(u)=>{setUser(u);setActive(NAV_BY_ROLE[u.role][0]);};
   const handleLogout=()=>{api.logout();setUser(null);setActive(null);};
-const pages={dashboard:<DashboardHome user={user} setActive={setActive}/>,reports:<Dashboard user={user}/>,rooms:<Rooms user={user}/>,reservations:<Reservations user={user}/>,customers:<Customers user={user}/>,'add-ons':<AddOns user={user}/>,users:<Users user={user}/>,audit:<Audit user={user}/>,approvals:<Approvals user={user}/>};
+const pages={dashboard:<DashboardHome user={user} setActive={setActive}/>,reports:<Dashboard user={user}/>,rooms:<Rooms user={user}/>,housekeeping:<Housekeeping user={user}/>,reservations:<Reservations user={user}/>,customers:<Customers user={user}/>,'add-ons':<AddOns user={user}/>,users:<Users user={user}/>,audit:<Audit user={user}/>,approvals:<Approvals user={user}/>};
   if(checking)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#1b3a2d'}}><div style={{color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif"}}>🌿 Loading…</div></div>);
   return(
     <>

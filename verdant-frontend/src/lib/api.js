@@ -122,6 +122,17 @@ export const getScheduleStaff = ()     => request('/schedules/staff');
 export const createSchedule   = (data) => request('/schedules',       { method: 'POST',   body: JSON.stringify(data) });
 export const deleteSchedule   = (id)   => request(`/schedules/${id}`, { method: 'DELETE' });
 
+export const getHousekeepingTasks = (filters = {}) => {
+  const p = new URLSearchParams();
+  if (filters.status && filters.status !== 'All') p.set('status', filters.status);
+  if (filters.room_id) p.set('room_id', filters.room_id);
+  if (filters.assigned_staff_id) p.set('assigned_staff_id', filters.assigned_staff_id);
+  return request(`/housekeeping?${p}`);
+};
+export const createHousekeepingTask = (data) => request('/housekeeping', { method: 'POST', body: JSON.stringify(data) });
+export const updateHousekeepingTask = (id, updates) => request(`/housekeeping/${id}`, { method: 'PUT', body: JSON.stringify(updates) });
+export const deleteHousekeepingTask = (id) => request(`/housekeeping/${id}`, { method: 'DELETE' });
+
 export const getDailyAudit = (date) => request(`/audit/daily?date=${date}`);
 export const getPendingCustomers  = ()            => request('/users/pending');
 export const approveCustomer      = (id, status)  => request(`/users/${id}/approve`, { method: 'PUT', body: JSON.stringify({ approval_status: status }) });

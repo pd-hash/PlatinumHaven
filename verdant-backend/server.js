@@ -13,6 +13,7 @@ const usersRouter = require('./routes/users');
 const schedulesRouter = require('./routes/schedules');
 const auditRouter = require('./routes/audit');
 const paypalRouter = require('./routes/paypal');
+const housekeepingModule = require('./routes/housekeeping');
 const { checkConnection } = require('./db');
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/schedules', schedulesRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/paypal', paypalRouter);
+app.use('/api/housekeeping', housekeepingModule.router);
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'Verdant Haven API' }));
 
@@ -90,10 +92,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Verdant Haven API running on port ${PORT}`);
-});
+const start = async () => {
+  try {
+    await housekeepingModule.ensureHousekeepingSchema();
+  } catch (err) {
+    console.error(`Housekeeping schema bootstrap failed: ${err.message}`);
+  }
 
-// Keep the HTTP server referenced so combined dev runners do not treat it as idle.
-server.ref();
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`Verdant Haven API running on port ${PORT}`);
+  });
+
+  // Keep the HTTP server referenced so combined dev runners do not treat it as idle.
+  server.ref();
+};
+
+start();

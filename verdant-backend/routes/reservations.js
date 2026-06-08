@@ -2,6 +2,7 @@ const router = require('express').Router();
 const pool = require('../db');
 const nodemailer = require('nodemailer');
 const { authenticate, adminOnly } = require('../middleware/auth');
+const { ensureHousekeepingTaskForReservation } = require('./housekeeping');
 
 const formatPH = (phone) => {
   if (!phone) return null;
@@ -372,6 +373,10 @@ const syncReservationStatuses = async (reservations) => {
       );
       reservation.status = derivedStatus;
     }
+
+    if (reservation.status === 'Completed' && reservation.room_id) {
+      await ensureHousekeepingTaskForReservation({ reservation });
+    }
   }
 
   if (updates.length) {
@@ -540,6 +545,10 @@ router.put('/:id', authenticate, async (req, res, next) => {
     const becamePaid =
       String(currentReservation.payment_status || '').toLowerCase() !== 'paid' &&
       String(reservation.payment_status || '').toLowerCase() === 'paid';
+
+    if (reservation.status === 'Completed' && reservation.room_id) {
+      await ensureHousekeepingTaskForReservation({ reservation });
+    }
 
     if (becameConfirmed || becamePaid) {
       await sendReservationNotifications(reservation);
