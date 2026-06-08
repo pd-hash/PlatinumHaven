@@ -121,6 +121,7 @@ export const getSchedules     = (week) => request(`/schedules?week=${week}`);
 export const getScheduleStaff = ()     => request('/schedules/staff');
 export const createSchedule   = (data) => request('/schedules',       { method: 'POST',   body: JSON.stringify(data) });
 export const deleteSchedule   = (id)   => request(`/schedules/${id}`, { method: 'DELETE' });
+export const getHousekeepingStaff = ()  => request('/housekeeping/staff');
 
 export const getHousekeepingTasks = (filters = {}) => {
   const p = new URLSearchParams();

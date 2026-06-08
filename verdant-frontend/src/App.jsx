@@ -31,6 +31,18 @@ const formatBookingDateTime = (value) => {
   });
 };
 
+const formatDateOnly = (value) => {
+  if (!value) return '--';
+  const normalized = String(value).replace(' ', 'T');
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return String(value).split('T')[0];
+  return parsed.toLocaleDateString('en-PH', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  });
+};
+
 const NAV_BY_ROLE = {
   admin:   ['dashboard','reports','housekeeping','users'],
   manager: ['dashboard','audit','rooms','housekeeping','add-ons','customers','approvals'],
@@ -1475,7 +1487,7 @@ const Housekeeping = ({ user }) => {
       const [taskData, roomData, staffData] = await Promise.all([
         api.getHousekeepingTasks({ status: filter }),
         api.getRooms({}),
-        canManage ? api.getScheduleStaff() : Promise.resolve([]),
+        canManage ? api.getHousekeepingStaff() : Promise.resolve([]),
       ]);
       setTasks(taskData);
       setRooms(roomData);
@@ -1614,7 +1626,7 @@ const Housekeeping = ({ user }) => {
                     }
                   </td>
                   <td style={{padding:'12px 16px'}}><StatusBadge status={task.status} /></td>
-                  <td style={{padding:'12px 16px',color:'#6b7280'}}>{task.due_date || (task.check_out ? formatBookingDateTime(task.check_out) : '—')}</td>
+                  <td style={{padding:'12px 16px',color:'#6b7280'}}>{formatDateOnly(task.due_date || task.check_out)}</td>
                   <td style={{padding:'12px 16px',color:'#6b7280',maxWidth:240}}>{task.notes || '—'}</td>
                   <td style={{padding:'12px 16px'}}>
                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
@@ -1638,7 +1650,7 @@ const Housekeeping = ({ user }) => {
         <Modal title={editingTask ? 'Edit Housekeeping Task' : 'Assign Housekeeping Task'} onClose={() => { setShowModal(false); resetForm(); }}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={labelStyle}>Room</label><select value={form.room_id} onChange={e => setForm(f => ({ ...f, room_id: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}><option value="">Select room...</option>{rooms.map(room => <option key={room.id} value={room.id}>{room.room_number} - {room.name}</option>)}</select></div>
-            <div><label style={labelStyle}>Assigned Cleaner</label><select value={form.assigned_staff_id} onChange={e => setForm(f => ({ ...f, assigned_staff_id: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}><option value="">Unassigned</option>{staffList.map(staff => <option key={staff.id} value={staff.id}>{staff.full_name} ({staff.role})</option>)}</select></div>
+            <div><label style={labelStyle}>Assigned Cleaner</label><select value={form.assigned_staff_id} onChange={e => setForm(f => ({ ...f, assigned_staff_id: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}><option value="">Saina only</option>{staffList.map(staff => <option key={staff.id} value={staff.id}>{staff.full_name} ({staff.role})</option>)}</select></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
               <div><label style={labelStyle}>Status</label><select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} style={{...inputStyle,cursor:'pointer'}}>{['Pending','In Progress','Completed','Blocked'].map(s => <option key={s}>{s}</option>)}</select></div>
               <div><label style={labelStyle}>Due Date</label><input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} style={inputStyle}/></div>

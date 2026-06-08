@@ -11,6 +11,25 @@ const managerOrAdmin = (req, res, next) => {
 
 const housekeepingStatuses = ['Pending', 'In Progress', 'Completed', 'Blocked'];
 
+const getHousekeepingAssignee = async () => {
+  const { rows } = await pool.query(
+    `
+      SELECT id, full_name, role, email
+      FROM profiles
+      WHERE role = 'staff'
+        AND is_active = true
+        AND (
+          full_name ILIKE 'Saina'
+          OR email ILIKE 'saina@haven.com'
+        )
+      ORDER BY CASE WHEN full_name ILIKE 'Saina' THEN 0 ELSE 1 END, created_at ASC
+      LIMIT 1
+    `
+  );
+
+  return rows[0] || null;
+};
+
 const ensureHousekeepingSchema = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS housekeeping_tasks (
@@ -36,6 +55,7 @@ const ensureHousekeepingSchema = async () => {
 
 const ensureHousekeepingTaskForReservation = async ({ reservation }) => {
   if (!reservation?.id || !reservation?.room_id) return null;
+  const assignee = await getHousekeepingAssignee();
 
   const reservationId = reservation.id;
   const roomId = reservation.room_id;
@@ -45,16 +65,17 @@ const ensureHousekeepingTaskForReservation = async ({ reservation }) => {
   const { rows } = await pool.query(
     `
       INSERT INTO housekeeping_tasks
-        (reservation_id, room_id, due_date, created_by, status)
-      VALUES ($1, $2, $3::date, $4, 'Pending')
+        (reservation_id, room_id, assigned_staff_id, due_date, created_by, status)
+      VALUES ($1, $2, $3, $4::date, $5, 'Pending')
       ON CONFLICT (reservation_id)
       DO UPDATE SET
         room_id = EXCLUDED.room_id,
+        assigned_staff_id = COALESCE(EXCLUDED.assigned_staff_id, housekeeping_tasks.assigned_staff_id),
         due_date = COALESCE(EXCLUDED.due_date, housekeeping_tasks.due_date),
         updated_at = NOW()
       RETURNING *
     `,
-    [reservationId, roomId, dueDate, createdBy]
+    [reservationId, roomId, assignee?.id || null, dueDate, createdBy]
   );
 
   return rows[0] || null;
@@ -121,6 +142,15 @@ router.get('/', authenticate, async (req, res, next) => {
   }
 });
 
+router.get('/staff', authenticate, managerOrAdmin, async (req, res, next) => {
+  try {
+    const assignee = await getHousekeepingAssignee();
+    res.json(assignee ? [assignee] : []);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/', authenticate, managerOrAdmin, async (req, res, next) => {
   try {
     const { room_id, reservation_id, assigned_staff_id, status, notes, due_date } = req.body;
@@ -150,6 +180,15 @@ router.post('/', authenticate, managerOrAdmin, async (req, res, next) => {
     }
 
     const taskStatus = housekeepingStatuses.includes(status) ? status : 'Pending';
+    const assignee = await getHousekeepingAssignee();
+    if (!assignee) {
+      return res.status(503).json({ error: 'Saina housekeeping account is not configured' });
+    }
+
+    if (assigned_staff_id && assigned_staff_id !== assignee.id) {
+      return res.status(400).json({ error: 'Housekeeping can only be assigned to Saina' });
+    }
+
     const { rows } = await pool.query(
       `
         INSERT INTO housekeeping_tasks
@@ -168,7 +207,7 @@ router.post('/', authenticate, managerOrAdmin, async (req, res, next) => {
       [
         finalReservationId,
         finalRoomId,
-        assigned_staff_id || null,
+        assignee.id,
         taskStatus,
         notes || null,
         finalDueDate,
@@ -199,7 +238,14 @@ router.put('/:id', authenticate, async (req, res, next) => {
 
     const nextStatus = housekeepingStatuses.includes(req.body?.status) ? req.body.status : task.status;
     const nextNotes = typeof req.body?.notes === 'string' ? req.body.notes : task.notes;
-    const nextAssignee = isManager && req.body?.assigned_staff_id ? req.body.assigned_staff_id : task.assigned_staff_id;
+    const assignee = await getHousekeepingAssignee();
+    if (!assignee) {
+      return res.status(503).json({ error: 'Saina housekeeping account is not configured' });
+    }
+    if (req.body?.assigned_staff_id && req.body.assigned_staff_id !== assignee.id) {
+      return res.status(400).json({ error: 'Housekeeping can only be assigned to Saina' });
+    }
+    const nextAssignee = assignee.id;
     const nextDueDate = isManager && req.body?.due_date ? req.body.due_date : task.due_date;
     const startedAt = task.started_at || (nextStatus === 'In Progress' ? new Date().toISOString() : null);
     const completedAt = nextStatus === 'Completed' ? new Date().toISOString() : task.completed_at;
